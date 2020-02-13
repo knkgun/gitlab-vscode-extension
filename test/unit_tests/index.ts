@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function run(testsRoot: string, cb: (error: any, failures?: number) => void): void {
   // Create the mocha test
   const mocha = new Mocha({
@@ -9,7 +10,7 @@ export function run(testsRoot: string, cb: (error: any, failures?: number) => vo
   });
   mocha.useColors(true);
 
-  glob('**/**.test.js', { cwd: testsRoot }, (err, files) => {
+  glob('**/**_test.js', { cwd: testsRoot }, (err, files) => {
     if (err) {
       return cb(err);
     }
@@ -22,9 +23,11 @@ export function run(testsRoot: string, cb: (error: any, failures?: number) => vo
       mocha.run(failures => {
         cb(null, failures);
       });
-    } catch (err) {
-      console.error(err);
+    } catch (ex) {
+      // eslint-disable-next-line no-console
+      console.error(`Exception: ${ex.name} - ${ex.message}\n${ex.stack}`);
       cb(err);
     }
+    return true;
   });
 }

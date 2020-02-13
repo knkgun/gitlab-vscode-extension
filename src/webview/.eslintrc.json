@@ -1,0 +1,29 @@
+{
+  "root": true,
+  "env": {
+    "node": true
+  },
+  "extends": [
+    "@gitlab",
+    "plugin:vue/essential",
+    "eslint:recommended",
+    "@vue/typescript/recommended",
+    "@vue/prettier",
+    "@vue/prettier/@typescript-eslint"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    "*.config.js",
+    "dist/",
+    "src/shims-vue.d.ts",
+    "src/shims-tsx.d.ts"
+  ],
+  "rules": {
+    "prettier/prettier": ["error"],
+    "import/no-unresolved": "off",
+    "import/extensions": "off"
+  }
+}

@@ -1,8 +1,14 @@
 .vscode/**
 .vscode-test/**
+src/**
 test/**
+!src/webview/dist/**
+!src/assets/images/**
+!src/assets/logo.png
 .gitignore
 .history
-jsconfig.json
-vsc-extension-quickstart.md
+tsconfig.json
 .eslintrc.json
+.editorconfig
+*.vsix
+yarn.lock

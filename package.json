@@ -2,7 +2,7 @@
   "name": "gitlab-workflow",
   "displayName": "GitLab Workflow",
   "description": "GitLab VSCode integration",
-  "version": "2.2.0",
+  "version": "4.0.1",
   "publisher": "fatihacet",
   "license": "MIT",
   "repository": {
@@ -10,7 +10,7 @@
     "url": "https://gitlab.com/fatihacet/gitlab-vscode-extension"
   },
   "engines": {
-    "vscode": "^1.41.0"
+    "vscode": "^1.42.0"
   },
   "categories": [
     "Other"
@@ -25,6 +25,9 @@
   "activationEvents": [
     "*"
   ],
+  "extensionDependencies": [
+    "vscode.git"
+  ],
   "bugs": {
     "url": "https://gitlab.com/fatihacet/gitlab-vscode-extension/issues",
     "email": "acetfatih@gmail.com"
@@ -33,7 +36,7 @@
     "color": "#805DE7",
     "theme": "dark"
   },
-  "main": "./src/extension",
+  "main": "./out/src/extension.js",
   "icon": "src/assets/logo.png",
   "contributes": {
     "commands": [
@@ -487,36 +490,49 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "node_modules/.bin/tsc -p ./",
+    "vscode:prepublish": "yarn run build; yarn run webview",
+    "build": "node_modules/.bin/tsc -p ./",
     "watch": "node_modules/.bin/tsc -watch -p ./",
-    "test": "node ./out/runTest.js",
-    "eslint": "node_modules/.bin/eslint --max-warnings 0 --ext .js .",
-    "format": "node_modules/.bin/prettier --write '**/*.{js,json}'",
+    "test": "node ./out/test/run_test.js",
+    "lint": "node_modules/.bin/eslint --max-warnings 0 --ext .ts,.js .",
+    "format": "node_modules/.bin/prettier --write '**/*.{js,ts,json}'",
     "publish": "node_modules/.bin/vsce publish",
-    "webview": "cd src/webview ; yarn install ; yarn watch"
+    "package": "node_modules/.bin/vsce package",
+    "webview:watch": "cd src/webview ; yarn install ; yarn watch",
+    "webview": "cd src/webview ; yarn install ; yarn build",
+    "clean": "rm -r out/ src/webview/dist/"
   },
   "devDependencies": {
+    "@gitlab/eslint-config": "^3.0.0",
     "@types/mocha": "^7.0.1",
-    "@types/node": "^13.7.0",
-    "@types/vscode": "^1.41.0",
+    "@types/moment-timezone": "^0.5.12",
+    "@types/node": "^13.7.1",
+    "@types/request-promise": "^4.1.45",
+    "@types/vscode": "^1.42.0",
+    "@typescript-eslint/eslint-plugin": "2.19.2",
+    "@typescript-eslint/parser": "^2.19.2",
+    "@vue/cli-plugin-eslint": "^4.2.2",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-typescript": "^5.0.1",
     "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.10.0",
-    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-jsdoc": "^21.0.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-vue": "^6.1.2",
+    "eslint-plugin-vue-libs": "^4.0.0",
+    "glob": "7.1.6",
     "mocha": "^7.0.1",
     "prettier": "^1.19.1",
-    "rewire": "^4.0.1",
     "typescript": "^3.7.5",
-    "vsce": "^1.72.0",
+    "vsce": "^1.73.0",
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
-    "eslint-plugin-vue-libs": "^4.0.0",
     "execa": "^1.0.0",
+    "gitlab": "^14.2.2",
     "moment": "^2.24.0",
-    "request": "^2.88.0",
+    "moment-timezone": "^0.5.27",
+    "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "url": "^0.11.0"
   }
