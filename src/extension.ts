@@ -3,6 +3,7 @@ import { OutputChannel } from 'vscode';
 import * as openers from './actions/openers';
 import * as tokenInput from './inputs/token_input';
 import * as tokenService from './services/token_service';
+import * as gitService from './services/git_service';
 import * as pipelineActionsInput from './inputs/pipeline_actions_input';
 import * as searchInput from './inputs/search_input';
 import * as snippetInput from './inputs/snippet_input';
@@ -70,7 +71,8 @@ const init = (context: vscode.ExtensionContext): void => {
   gitlabOutputChannel.appendLine('INFO: Inizializing extension...');
   webviewController.addDeps(context);
   tokenService.init(context);
-  gitlabOutputChannel.appendLine('INFO: Extension initialized.');
+  gitService.init();
+   gitlabOutputChannel.appendLine('INFO: Extension initialized.');
 };
 
 export function activate(context: vscode.ExtensionContext): void {

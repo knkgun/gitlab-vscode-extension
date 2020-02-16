@@ -10,7 +10,7 @@ import { gitlabOutputChannel } from '../extension';
 import * as gitLab from '../types/gitlab';
 
 interface GitlabProjectPromise {
-  label: Promise<ProjectSchema | null>;
+  project: Promise<ProjectSchema | null>;
   uri: string;
 }
 
@@ -137,7 +137,7 @@ async function fetchProjectData(remote: gitService.GitlabRemote): Promise<Projec
 
 export async function fetchCurrentProject(workspaceFolder: string): Promise<ProjectSchema | null> {
   try {
-    const remote: gitService.GitlabRemote | null = await gitService.fetchGitRemote(workspaceFolder);
+    const remote: gitService.GitlabRemote | null = gitService.fetchGitRemote(workspaceFolder);
     if (remote) {
       return await fetchProjectData(remote);
     }
@@ -153,7 +153,7 @@ export async function fetchCurrentPipelineProject(
   workspaceFolder: string,
 ): Promise<ProjectSchema | null> {
   try {
-    const remote: gitService.GitlabRemote | null = await gitService.fetchGitRemotePipeline(
+    const remote: gitService.GitlabRemote | null = gitService.fetchGitRemotePipeline(
       workspaceFolder,
     );
     if (remote) {
@@ -198,12 +198,12 @@ export async function getAllGitlabProjects(): Promise<gitLab.GitlabProject[]> {
   let workspaceFolders: gitLab.GitlabProject[] = [];
   if (vscode.workspace.workspaceFolders) {
     workspaceFoldersPromise = vscode.workspace.workspaceFolders.map(workspaceFolder => ({
-      label: fetchCurrentProject(workspaceFolder.uri.fsPath),
+      project: fetchCurrentProject(workspaceFolder.uri.fsPath),
       uri: workspaceFolder.uri.fsPath,
     }));
 
-    const labels = await Promise.all(
-      workspaceFoldersPromise.map(workspaceFolder => workspaceFolder.label),
+    const projects = await Promise.all(
+      workspaceFoldersPromise.map(workspaceFolder => workspaceFolder.project),
     )
       .then(res => res)
       .catch(err =>
@@ -213,8 +213,13 @@ export async function getAllGitlabProjects(): Promise<gitLab.GitlabProject[]> {
       );
 
     for (let i = 0; i < workspaceFoldersPromise.length; i += 1) {
+      let label = '';
+      const project: ProjectSchema | null = projects ? projects[i] : null;
+      if (project && project.name) {
+        label = project.name;
+      }
       workspaceFolders[i] = {
-        label: labels[i]?.name ? labels[i]?.name : '',
+        label,
         uri: workspaceFoldersPromise[i].uri,
       };
     }

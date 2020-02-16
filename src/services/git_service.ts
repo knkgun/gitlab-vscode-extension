@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
-import * as execa from 'execa';
 import * as url from 'url';
+import { GitExtension, API, Repository, Branch, APIState } from '../api/git';
 import { gitlabOutputChannel } from '../extension';
+import * as statusBar from '../ui/status_bar';
+import * as sidebar from '../ui/sidebar';
+
+let gitExtension: GitExtension | undefined;
+let git: API | undefined;
 
 export interface GitlabRemote {
   schema: string;
@@ -12,32 +17,18 @@ export interface GitlabRemote {
 
 const currentInstanceUrl = () => vscode.workspace.getConfiguration('gitlab').instanceUrl;
 
-async function fetch(cmd: string, workspaceFolder: string): Promise<string | null> {
-  const [git, ...args] = cmd.split(' ');
-  let currentWorkspaceFolder = workspaceFolder;
+function fetchBranchName(workspaceFolder: string): string | null {
+  const path = vscode.Uri.file(workspaceFolder);
+  const repository: Repository | null | undefined = git?.getRepository(path);
+  const head: Branch | undefined = repository?.state.HEAD;
 
-  if (currentWorkspaceFolder == null) {
-    currentWorkspaceFolder = '';
+  if (head) {
+    const { name: branch } = head;
+    if (branch) {
+      return branch;
+    }
   }
-  let output: string | null = null;
-  try {
-    output = await execa.stdout(git, args, {
-      cwd: currentWorkspaceFolder,
-    });
-  } catch (ex) {
-    gitlabOutputChannel.appendLine(
-      `ERROR: Exception executing git command: ${ex.name} - ${ex.message}\n${ex.stack}`,
-    );
-  }
-
-  return output;
-}
-
-export async function fetchBranchName(workspaceFolder: string): Promise<string | null> {
-  const cmd = 'git rev-parse --abbrev-ref HEAD';
-  const output = await fetch(cmd, workspaceFolder);
-
-  return output;
+  return null;
 }
 
 /**
@@ -48,11 +39,12 @@ export async function fetchBranchName(workspaceFolder: string): Promise<string |
  * local branch still tracks another branch on remote.
  */
 export async function fetchTrackingBranchName(workspaceFolder: string): Promise<string | null> {
-  const branchName = await fetchBranchName(workspaceFolder);
+  const branchName = fetchBranchName(workspaceFolder);
 
   try {
-    const cmd = `git config --get branch.${branchName}.merge`;
-    const ref = await fetch(cmd, workspaceFolder);
+    const path = vscode.Uri.file(workspaceFolder);
+    const repository: Repository | null | undefined = git?.getRepository(path);
+    const ref: string | undefined = await repository?.getConfig(`branch.${branchName}.merge`);
 
     if (ref) {
       return ref.replace('refs/heads/', '');
@@ -66,11 +58,18 @@ export async function fetchTrackingBranchName(workspaceFolder: string): Promise<
   return branchName;
 }
 
-export async function fetchLastCommitId(workspaceFolder: string): Promise<string | null> {
-  const cmd = 'git log --format=%H -n 1';
-  const output: string | null = await fetch(cmd, workspaceFolder);
+export function fetchLastCommitId(workspaceFolder: string): string | null {
+  const path = vscode.Uri.file(workspaceFolder);
+  const repository: Repository | null | undefined = git?.getRepository(path);
+  const head: Branch | undefined = repository?.state.HEAD;
 
-  return output;
+  if (head) {
+    const { commit } = head;
+    if (commit) {
+      return commit;
+    }
+  }
+  return null;
 }
 
 const getInstancePath = (): string => {
@@ -110,23 +109,22 @@ export const parseGitRemote = (remote: string): string[] | null => {
   return null;
 };
 
-async function fetchRemoteUrl(name: string, workspaceFolder: string): Promise<GitlabRemote | null> {
-  let remoteUrl: string | null = null;
-  let remoteName: string | null = name;
+function fetchRemoteUrl(name: string, workspaceFolder: string): GitlabRemote | null {
+  let remoteUrl: string | undefined | null = null;
+  let remoteName: string | undefined = name;
+  const path = vscode.Uri.file(workspaceFolder);
+  const repository: Repository | null | undefined = git?.getRepository(path);
+  const head: Branch | undefined = repository?.state.HEAD;
 
-  try {
-    const branchName: string | null = await fetchBranchName(workspaceFolder);
-    if (!remoteName) {
-      remoteName = await fetch(`git config --get branch.${branchName}.remote`, workspaceFolder);
-    }
-    remoteUrl = await fetch(`git ls-remote --get-url ${remoteName}`, workspaceFolder);
-  } catch (err) {
-    try {
-      remoteUrl = await fetch('git ls-remote --get-url', workspaceFolder);
-    } catch (e) {
-      const remote: string | null = await fetch('git remote', workspaceFolder);
-
-      remoteUrl = await fetch(`git ls-remote --get-url ${remote}`, workspaceFolder);
+  if (!remoteName) {
+    remoteName = head?.upstream?.remote;
+  }
+  if (remoteName) {
+    const remotes = repository?.state.remotes.filter(remote => {
+      return remote.name === remoteName;
+    });
+    if (remotes && remotes?.length > 0) {
+      remoteUrl = remotes[0].fetchUrl;
     }
   }
 
@@ -141,16 +139,59 @@ async function fetchRemoteUrl(name: string, workspaceFolder: string): Promise<Gi
   return null;
 }
 
-export async function fetchGitRemote(workspaceFolder: string): Promise<GitlabRemote | null> {
+export function fetchGitRemote(workspaceFolder: string): GitlabRemote | null {
   const { remoteName } = vscode.workspace.getConfiguration('gitlab');
 
   return fetchRemoteUrl(remoteName, workspaceFolder);
 }
 
-export async function fetchGitRemotePipeline(
-  workspaceFolder: string,
-): Promise<GitlabRemote | null> {
+export function fetchGitRemotePipeline(workspaceFolder: string): GitlabRemote | null {
   const { pipelineGitRemoteName } = vscode.workspace.getConfiguration('gitlab');
 
   return fetchRemoteUrl(pipelineGitRemoteName, workspaceFolder);
+}
+
+function onRepositoryChange(repository: Repository) {
+  const states: Map<string, string> = new Map<string, string>();
+
+  const repoUri: string = repository.rootUri.toString();
+  if (!states.has(repoUri)) {
+    if (repository.state.HEAD?.name) {
+      states.set(repoUri, repository.state.HEAD?.name);
+    }
+    gitlabOutputChannel.appendLine(`Add repo ${repoUri}`);
+    repository.state.onDidChange(() => {
+      const branch: string | undefined = repository.state.HEAD?.name;
+      const oldBranch: string | undefined = states.get(repoUri);
+      if (branch && oldBranch && branch !== oldBranch) {
+        statusBar.refresh();
+        sidebar.refresh('CurrentBranchDataProvider');
+      }
+      if (branch) {
+        states.set(repoUri, branch);
+      }
+    });
+  }
+}
+
+export function init(): void {
+  gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
+  git = gitExtension?.getAPI(1);
+
+  if (git) {
+    git.onDidChangeState((e: APIState) => {
+      if (e === 'initialized') {
+        const repositories = git?.repositories;
+
+        if (repositories) {
+          repositories.forEach(repository => {
+            onRepositoryChange(repository);
+          });
+        }
+      }
+    });
+    git.onDidOpenRepository((repository: Repository) => {
+      onRepositoryChange(repository);
+    });
+  }
 }

@@ -10,7 +10,6 @@ let pipelineStatusBarItem: vscode.StatusBarItem;
 let pipelinesStatusTimer: NodeJS.Timeout | null = null;
 let mrStatusBarItem: vscode.StatusBarItem;
 let mrIssueStatusBarItem: vscode.StatusBarItem;
-let mrStatusTimer: NodeJS.Timeout | null = null;
 let issue: gitLab.Issuable;
 let mr: gitLab.Issuable | null;
 let firstRun = true;
@@ -154,9 +153,11 @@ const initPipelineStatus = (): void => {
     'gl.pipelineActions',
   );
 
+  const { pipelineStatusTimeout } = vscode.workspace.getConfiguration('gitlab');
+
   pipelinesStatusTimer = setInterval(() => {
     refreshPipeline();
-  }, 5000);
+  }, pipelineStatusTimeout);
 
   refreshPipeline();
 };
@@ -227,9 +228,6 @@ const initMrStatus = (): void => {
   });
 
   mrStatusBarItem = createStatusBarItem('$(info) GitLab: Finding MR...', cmdName);
-  mrStatusTimer = setInterval(() => {
-    fetchBranchMR();
-  }, 5000);
 
   fetchBranchMR();
 };
@@ -273,9 +271,12 @@ export const dispose = (): void => {
     clearInterval(pipelinesStatusTimer);
     pipelinesStatusTimer = null;
   }
+};
 
-  if (mrStatusTimer) {
-    clearInterval(mrStatusTimer);
-    mrStatusTimer = null;
+export const refresh = (): void => {
+  if (showStatusBarLinks) {
+    if (showIssueLinkOnStatusBar || showMrStatusOnStatusBar) {
+      fetchBranchMR();
+    }
   }
 };

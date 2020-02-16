@@ -2,9 +2,11 @@ import { GitlabDataProvider } from '../data_providers/gitlab_data_provider';
 
 const sidebarDataProviders: GitlabDataProvider[] = [];
 
-export const refresh = (): void => {
+export const refresh = (type: string | null = null): void => {
   sidebarDataProviders.forEach(provider => {
-    provider.refresh();
+    if (type === null || provider.constructor.name === type) {
+      provider.refresh();
+    }
   });
 };
 

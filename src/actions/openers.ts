@@ -180,7 +180,7 @@ export async function compareCurrentBranch(): Promise<void> {
   try {
     if (workspaceFolder) {
       project = await gitLabService.fetchCurrentProject(workspaceFolder);
-      lastCommitId = await gitService.fetchLastCommitId(workspaceFolder);
+      lastCommitId = gitService.fetchLastCommitId(workspaceFolder);
     }
   } catch (ex) {
     gitlabOutputChannel.appendLine(
