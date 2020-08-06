@@ -64,6 +64,7 @@ describe('GitLab tree view', () => {
   ];
 
   before(async () => {
+    await vscode.commands.executeCommand('gl.refreshSidebar');
     server = getServer([
       createQueryJsonEndpoint('/users', {
         '?username=johndoe': [userResponse],

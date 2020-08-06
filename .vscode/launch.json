@@ -28,6 +28,9 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
+      "env": {
+        "COVERAGE": "true"
+      },
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceRoot}",

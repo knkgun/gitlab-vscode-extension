@@ -20,6 +20,7 @@ describe('Insert snippet', async () => {
   const sandbox = sinon.createSandbox();
 
   before(async () => {
+    await vscode.commands.executeCommand('gl.refreshSidebar');
     server = getServer([
       createTextEndpoint(
         '/projects/278964/snippets/111/files/master/test.js/raw',

@@ -20,6 +20,7 @@ describe('GitLab status bar', () => {
   };
 
   before(async () => {
+    await vscode.commands.executeCommand('gl.refreshSidebar');
     server = getServer([
       createJsonEndpoint('/projects/278964/pipelines?ref=master', pipelinesResponse),
       createJsonEndpoint('/projects/278964/pipelines/47', pipelineResponse),

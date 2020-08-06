@@ -23,7 +23,26 @@
     "ci cd"
   ],
   "activationEvents": [
-    "*"
+    "onCommand:gl.showIssuesAssignedToMe",
+    "onCommand:gl.showMergeRequestsAssignedToMe",
+    "onCommand:gl.setToken",
+    "onCommand:gl.removeToken",
+    "onCommand:gl.openActiveFile",
+    "onCommand:gl.copyLinkToActiveFile",
+    "onCommand:gl.openCurrentMergeRequest",
+    "onCommand:gl.openCreateNewIssue",
+    "onCommand:gl.openCreateNewMR",
+    "onCommand:gl.openProjectPage",
+    "onCommand:gl.openCurrentPipeline",
+    "onCommand:gl.pipelineActions",
+    "onCommand:gl.issueSearch",
+    "onCommand:gl.mergeRequestSearch",
+    "onCommand:gl.compareCurrentBranch",
+    "onCommand:gl.createSnippet",
+    "onCommand:gl.validateCIConfig",
+    "onCommand:gl.refreshSidebar",
+    "onCommand:gl.showRichContent",
+    "onView:issuesAndMrs"
   ],
   "bugs": {
     "url": "https://gitlab.com/gitlab-org/gitlab-vscode-extension/issues",
@@ -537,6 +556,7 @@
     "jest": "^26.4.2",
     "mocha": "^7.0.1",
     "msw": "^0.21.2",
+    "nyc": "^15.1.0",
     "prettier": "^1.19.1",
     "rewire": "^4.0.1",
     "simple-git": "^2.14.0",
