@@ -53,7 +53,7 @@ describe('git_service', () => {
         });
       });
 
-      it('gets the remote url for user configured remote name', async () => {
+      it('gets the remote url for user configured git based remote', async () => {
         await git.addRemote(SECOND_REMOTE, 'git@test.another.com:gitlab-org/gitlab.git');
         const options = { ...getDefaultOptions(), remoteName: SECOND_REMOTE };
         gitService = new GitService(options);
@@ -61,6 +61,16 @@ describe('git_service', () => {
         const remoteUrl = await gitService.fetchGitRemote();
 
         expect(remoteUrl?.host).toEqual('test.another.com');
+      });
+
+      it('ignores the remote url for user configured file based remote', async () => {
+        await git.addRemote(SECOND_REMOTE, 'file:///tmp/gitlab-org/gitlab.git');
+        const options = { ...getDefaultOptions(), remoteName: SECOND_REMOTE };
+        gitService = new GitService(options);
+
+        const remoteUrl = await gitService.fetchGitRemote();
+
+        expect(remoteUrl?.host).toEqual('test.gitlab.com');
       });
 
       it('gets default remote for a branch', async () => {

@@ -1,5 +1,6 @@
 import * as execa from 'execa';
 import * as url from 'url';
+import * as gitUrlParse from 'git-url-parse';
 import { GITLAB_COM_URL } from './constants';
 import { parseGitRemote, GitRemote } from './git/git_remote_parser';
 
@@ -81,7 +82,11 @@ export class GitService {
   }
 
   async fetchGitRemote(): Promise<GitRemote | null> {
-    return await this.fetchRemoteUrl(this.remoteName);
+    if (!this.remoteName) {
+      return await this.fetchRemoteUrl();
+    }
+
+    return (await this.fetchRemoteUrl(this.remoteName)) || (await this.fetchRemoteUrl());
   }
 
   async fetchBranchName(): Promise<string | null> {
@@ -129,12 +134,24 @@ export class GitService {
       return (output || '').split('\n');
     };
 
-    const parseRemoteFromVerboseLine = (line: string) => {
+    const parseRemoteFromVerboseLine = (line: string): string | null => {
       // git remote -v output looks like
       // origin[TAB]git@gitlab.com:gitlab-org/gitlab-vscode-extension.git[WHITESPACE](fetch)
       // the interesting part is surrounded by a tab symbol and a whitespace
+      const m = line.split(/\t| /);
+      if (!m) {
+        return null;
+      }
 
-      return line.split(/\t| /)[1];
+      const remoteUrl = m[1];
+      const parsedRemotedUrl = gitUrlParse(remoteUrl);
+
+      // git remotes of protocol type 'file' are not supported
+      if (parsedRemotedUrl.protocol === 'file') {
+        return null;
+      }
+
+      return remoteUrl;
     };
 
     const remotes = await fetchGitRemotesVerbose();
@@ -142,7 +159,7 @@ export class GitService {
 
     // git remote -v returns a (fetch) and a (push) line for each remote,
     // so we need to remove duplicates
-    return [...new Set(remoteUrls)];
+    return [...new Set(remoteUrls)] as string[];
   }
 
   private async intersectionOfInstanceAndTokenUrls() {
