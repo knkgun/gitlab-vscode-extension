@@ -538,7 +538,9 @@
     "vscode-test": "^1.4.0"
   },
   "dependencies": {
+    "@types/git-url-parse": "^9.0.0",
     "execa": "^4.0.3",
+    "git-url-parse": "^11.3.0",
     "moment": "^2.24.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
