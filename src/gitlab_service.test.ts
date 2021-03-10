@@ -71,8 +71,9 @@ describe('fetchIssueables', () => {
     confidenceLevels: undefined,
   };
 
-  let request;
-  let fetchIssuablesRef;
+  let request: jest.Mock;
+  let fetchIssuablesRef: (params: CustomQuery, workspaceFolder: string) => Promise<RestIssuable[]>;
+  type MockFn = (...args: any) => any;
 
   const setupFetchIssuable = ({ version = '13.9', mocks = [] }: Record<string, unknown> = {}) => {
     request = require('request-promise');
@@ -80,7 +81,7 @@ describe('fetchIssueables', () => {
     jest.mock('request-promise', () => jest.fn(() => ({ response: [] })));
     fetchIssuablesRef = fetchIssuables;
 
-    const implementations = [() => ({ response: { version } }), ...mocks];
+    const implementations = [() => ({ response: { version } }), ...(mocks as MockFn[])];
     implementations.forEach(imp => request.mockImplementationOnce(imp));
   };
 
