@@ -8,6 +8,7 @@ import { GitExtension } from '../api/git';
 import { gitlabCredentialsProvider } from '../gitlab/clone/gitlab_credentials_provider';
 import { GitLabRemoteSourceProviderRepository } from '../gitlab/clone/gitlab_remote_source_provider_repository';
 import { handleError, log } from '../log';
+import { RepositoryManager } from './repository_manager';
 
 export class GitExtensionWrapper implements Disposable {
   disposables = new Set<Disposable>();
@@ -30,7 +31,9 @@ export class GitExtensionWrapper implements Disposable {
   private initialize() {
     try {
       const gitAPI = this.gitExtension.getAPI(1);
-
+      const repositoryManager = new RepositoryManager();
+      repositoryManager.initialize(gitAPI);
+      this.disposables.add(repositoryManager);
       this.disposables.add(new GitLabRemoteSourceProviderRepository(gitAPI));
       this.disposables.add(gitAPI.registerCredentialsProvider(gitlabCredentialsProvider));
     } catch (err) {
