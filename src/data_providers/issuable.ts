@@ -8,6 +8,8 @@ import { ItemModel } from './items/item_model';
 import { CONFIG_CUSTOM_QUERIES, CONFIG_NAMESPACE } from '../constants';
 import { logError } from '../log';
 import { ErrorItem } from './items/error_item';
+import { WrappedRepository } from '../git/wrapped_repository';
+import { repositoryManager } from '../git/repository_manager';
 
 export class DataProvider implements vscode.TreeDataProvider<ItemModel | vscode.TreeItem> {
   private eventEmitter = new vscode.EventEmitter<void>();
@@ -21,24 +23,18 @@ export class DataProvider implements vscode.TreeDataProvider<ItemModel | vscode.
 
     this.children.forEach(ch => ch.dispose());
     this.children = [];
-    let workspaces: GitLabWorkspace[] = [];
-    try {
-      workspaces = await gitLabService.getAllGitlabWorkspaces();
-    } catch (e) {
-      logError(e);
-      return [new ErrorItem('Fetching Issues and MRs failed')];
-    }
-    if (workspaces.length === 0) return [new vscode.TreeItem('No projects found')];
+    const repositories = await repositoryManager.getAllRepositories();
+    if (repositories.length === 0) return [new vscode.TreeItem('No projects found')];
     // FIXME: if you are touching this configuration statement, move the configuration to get_extension_configuration.ts
     const customQueries =
       vscode.workspace
         .getConfiguration(CONFIG_NAMESPACE)
         .get<CustomQuery[]>(CONFIG_CUSTOM_QUERIES) || [];
-    if (workspaces.length === 1) {
-      this.children = customQueries.map(q => new CustomQueryItemModel(q, workspaces[0]));
+    if (repositories.length === 1) {
+      this.children = customQueries.map(q => new CustomQueryItemModel(q, repositories[0]));
       return this.children;
     }
-    this.children = customQueries.map(q => new MultirootCustomQueryItemModel(q, workspaces));
+    this.children = customQueries.map(q => new MultirootCustomQueryItemModel(q, repositories));
     return this.children;
   }
 

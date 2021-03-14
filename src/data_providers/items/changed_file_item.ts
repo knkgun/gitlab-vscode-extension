@@ -2,6 +2,7 @@ import { TreeItem, Uri } from 'vscode';
 import { posix as path } from 'path';
 import { toReviewUri } from '../../review/review_uri';
 import { PROGRAMMATIC_COMMANDS, VS_COMMANDS } from '../../command_names';
+import { WrappedRepository } from '../../git/wrapped_repository';
 
 const getChangeTypeIndicator = (diff: RestDiffFile): string => {
   if (diff.new_file) return '[added] ';
@@ -30,7 +31,7 @@ export class ChangedFileItem extends TreeItem {
 
   mrVersion: RestMrVersion;
 
-  workspace: GitLabWorkspace;
+  repository: WrappedRepository;
 
   file: RestDiffFile;
 
@@ -38,14 +39,14 @@ export class ChangedFileItem extends TreeItem {
     mr: RestIssuable,
     mrVersion: RestMrVersion,
     file: RestDiffFile,
-    workspace: GitLabWorkspace,
+    repository: WrappedRepository,
   ) {
     super(Uri.file(file.new_path));
     // TODO add FileDecorationProvider once it is available in the 1.52 https://github.com/microsoft/vscode/issues/54938
     this.description = `${getChangeTypeIndicator(file)}${path.dirname(`/${file.new_path}`)}`;
     this.mr = mr;
     this.mrVersion = mrVersion;
-    this.workspace = workspace;
+    this.repository = repository;
     this.file = file;
 
     if (looksLikeImage(file.old_path) || looksLikeImage(file.new_path)) {
@@ -56,13 +57,16 @@ export class ChangedFileItem extends TreeItem {
       return;
     }
 
-    const emptyFileUri = toReviewUri({ workspacePath: workspace.uri, projectId: mr.project_id });
+    const emptyFileUri = toReviewUri({
+      workspacePath: repository.rootFsPath,
+      projectId: mr.project_id,
+    });
     const baseFileUri = file.new_file
       ? emptyFileUri
       : toReviewUri({
           path: file.old_path,
           commit: mrVersion.base_commit_sha,
-          workspacePath: workspace.uri,
+          workspacePath: repository.rootFsPath,
           projectId: mr.project_id,
         });
     const headFileUri = file.deleted_file
@@ -70,7 +74,7 @@ export class ChangedFileItem extends TreeItem {
       : toReviewUri({
           path: file.new_path,
           commit: mrVersion.head_commit_sha,
-          workspacePath: workspace.uri,
+          workspacePath: repository.rootFsPath,
           projectId: mr.project_id,
         });
 

@@ -1,18 +1,19 @@
 import { TreeItem } from 'vscode';
 import { PROGRAMMATIC_COMMANDS } from '../../command_names';
+import { WrappedRepository } from '../../git/wrapped_repository';
 
 export class IssueItem extends TreeItem {
   issue: RestIssuable;
 
-  workspace: GitLabWorkspace;
+  repository: WrappedRepository;
 
-  constructor(issue: RestIssuable, workspace: GitLabWorkspace) {
+  constructor(issue: RestIssuable, repository: WrappedRepository) {
     super(`#${issue.iid} · ${issue.title}`);
     this.issue = issue;
-    this.workspace = workspace;
+    this.repository = repository;
     this.command = {
       command: PROGRAMMATIC_COMMANDS.SHOW_RICH_CONTENT,
-      arguments: [this.issue, this.workspace.uri],
+      arguments: [this.issue, this.repository.rootFsPath],
       title: 'Show Issue',
     };
   }

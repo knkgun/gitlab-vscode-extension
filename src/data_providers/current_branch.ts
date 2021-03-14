@@ -45,55 +45,56 @@ class DataProvider implements vscode.TreeDataProvider<ItemModel | vscode.TreeIte
     return new ExternalUrlItem(message, url);
   }
 
-  async createMrItem(mr: RestIssuable | null, workspace: GitLabWorkspace) {
-    if (!mr) {
-      return new vscode.TreeItem('No merge request found');
-    }
-    this.mr = mr;
-    const item = new MrItemModel(mr, workspace);
-    this.disposableChildren.push(item);
-    return item;
-  }
+  // async createMrItem(mr: RestIssuable | null, workspace: GitLabWorkspace) {
+  //   if (!mr) {
+  //     return new vscode.TreeItem('No merge request found');
+  //   }
+  //   this.mr = mr;
+  //   const item = new MrItemModel(mr, workspace);
+  //   this.disposableChildren.push(item);
+  //   return item;
+  // }
 
-  async fetchClosingIssue(workspaceFolder: string, workspace: GitLabWorkspace) {
-    if (this.mr) {
-      const issues = await gitLabService.fetchMRIssues(this.mr.iid, workspaceFolder);
+  // async fetchClosingIssue(workspaceFolder: string, workspace: GitLabWorkspace) {
+  //   if (this.mr) {
+  //     const issues = await gitLabService.fetchMRIssues(this.mr.iid, workspaceFolder);
 
-      if (issues.length) {
-        return issues.map(issue => new IssueItem(issue, workspace));
-      }
-    }
-    return [new vscode.TreeItem('No closing issue found')];
-  }
+  //     if (issues.length) {
+  //       return issues.map(issue => new IssueItem(issue, workspace));
+  //     }
+  //   }
+  //   return [new vscode.TreeItem('No closing issue found')];
+  // }
 
   async getChildren(item: ItemModel | undefined): Promise<ItemModel[] | vscode.TreeItem[]> {
-    if (item) return item.getChildren();
-    this.disposableChildren.forEach(s => s.dispose());
-    this.disposableChildren = [];
-    const workspaceFolder = await getCurrentWorkspaceFolder();
-    if (!workspaceFolder) {
-      return [];
-    }
-    try {
-      const gitlabProject = await gitLabService.fetchCurrentProject(workspaceFolder);
-      if (!gitlabProject) {
-        return [];
-      }
-      const vsProject = {
-        label: gitlabProject.name,
-        uri: workspaceFolder,
-      };
-      const { pipeline, mr } = await gitLabService.fetchPipelineAndMrForCurrentBranch(
-        workspaceFolder,
-      );
-      const pipelineItem = await this.createPipelineItem(pipeline, gitlabProject);
-      const mrItem = await this.createMrItem(mr, vsProject);
-      const closingIssuesItems = await this.fetchClosingIssue(workspaceFolder, vsProject);
-      return [pipelineItem, mrItem, ...closingIssuesItems] as vscode.TreeItem[]; // TODO the actual type includes ItemMode
-    } catch (e) {
-      handleError(e);
-      return [new ErrorItem()];
-    }
+    // if (item) return item.getChildren();
+    // this.disposableChildren.forEach(s => s.dispose());
+    // this.disposableChildren = [];
+    // const workspaceFolder = await getCurrentWorkspaceFolder();
+    // if (!workspaceFolder) {
+    //   return [];
+    // }
+    // try {
+    //   const gitlabProject = await gitLabService.fetchCurrentProject(workspaceFolder);
+    //   if (!gitlabProject) {
+    //     return [];
+    //   }
+    //   const vsProject = {
+    //     label: gitlabProject.name,
+    //     uri: workspaceFolder,
+    //   };
+    //   const { pipeline, mr } = await gitLabService.fetchPipelineAndMrForCurrentBranch(
+    //     workspaceFolder,
+    //   );
+    //   const pipelineItem = await this.createPipelineItem(pipeline, gitlabProject);
+    //   const mrItem = await this.createMrItem(mr, vsProject);
+    //   const closingIssuesItems = await this.fetchClosingIssue(workspaceFolder, vsProject);
+    //   return [pipelineItem, mrItem, ...closingIssuesItems] as vscode.TreeItem[]; // TODO the actual type includes ItemMode
+    // } catch (e) {
+    //   handleError(e);
+    //   return [new ErrorItem()];
+    // }
+    return [];
   }
 
   // eslint-disable-next-line class-methods-use-this

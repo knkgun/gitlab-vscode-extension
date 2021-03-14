@@ -1,31 +1,31 @@
-import * as vscode from 'vscode';
-import { MultirootCustomQueryItemModel } from './multiroot_custom_query_item_model';
-import { CustomQueryItemModel } from './custom_query_item_model';
-import { customQuery, workspace } from '../../test_utils/entities';
+// import * as vscode from 'vscode';
+// import { MultirootCustomQueryItemModel } from './multiroot_custom_query_item_model';
+// import { CustomQueryItemModel } from './custom_query_item_model';
+// import { customQuery, workspace } from '../../test_utils/entities';
 
-const projects = [
-  { ...workspace, label: 'label p1' },
-  { ...workspace, label: 'label p2' },
-];
+// const projects = [
+//   { ...workspace, label: 'label p1' },
+//   { ...workspace, label: 'label p2' },
+// ];
 
-describe('MultirootCustomQueryItem', () => {
-  let item: MultirootCustomQueryItemModel;
+// describe('MultirootCustomQueryItem', () => {
+//   let item: MultirootCustomQueryItemModel;
 
-  beforeEach(() => {
-    item = new MultirootCustomQueryItemModel(customQuery, projects);
-  });
+//   beforeEach(() => {
+//     item = new MultirootCustomQueryItemModel(customQuery, projects);
+//   });
 
-  it('should use query name to create collapsed item', async () => {
-    const treeItem = await item.getTreeItem();
-    expect(treeItem.label).toBe('Query name');
-    expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
-  });
+//   it('should use query name to create collapsed item', async () => {
+//     const treeItem = await item.getTreeItem();
+//     expect(treeItem.label).toBe('Query name');
+//     expect(treeItem.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+//   });
 
-  it('should return custom query children with project label', async () => {
-    const [a, b] = await item.getChildren();
-    expect(a).toBeInstanceOf(CustomQueryItemModel);
-    expect(b).toBeInstanceOf(CustomQueryItemModel);
-    expect(await a.getTreeItem().label).toBe('label p1');
-    expect(await b.getTreeItem().label).toBe('label p2');
-  });
-});
+//   it('should return custom query children with project label', async () => {
+//     const [a, b] = await item.getChildren();
+//     expect(a).toBeInstanceOf(CustomQueryItemModel);
+//     expect(b).toBeInstanceOf(CustomQueryItemModel);
+//     expect(await a.getTreeItem().label).toBe('label p1');
+//     expect(await b.getTreeItem().label).toBe('label p2');
+//   });
+// });
