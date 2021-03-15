@@ -217,10 +217,7 @@ async function fetchLastPipelineForCurrentBranch(
 
 type QueryValue = string | boolean | string[] | number | undefined;
 
-export async function fetchIssuables(
-  params: CustomQuery,
-  workspaceFolder: string,
-): Promise<RestIssuable[]> {
+export async function fetchIssuables(params: CustomQuery, workspaceFolder: string) {
   const { type, scope, state, author, assignee, wip } = params;
   let { searchIn, pipelineId } = params;
   const config = {
@@ -370,7 +367,7 @@ export async function fetchIssuables(
 
   const { response } = await fetch(`${path}?${search.toString()}`);
   issuable = response;
-  return (issuable as RestIssuable[]).map(normalizeAvatarUrl(await getInstanceUrl()));
+  return issuable.map(normalizeAvatarUrl(await getInstanceUrl()));
 }
 
 export async function fetchLastJobsForCurrentBranch(

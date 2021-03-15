@@ -36,7 +36,7 @@ export class CustomQueryItemModel extends ItemModel {
     return item;
   }
 
-  private async getProjectIssues(): Promise<vscode.TreeItem[]> {
+  private async getProjectIssues(): Promise<vscode.TreeItem[] | ItemModel[]> {
     const issues = await gitLabService.fetchIssuables(this.customQuery, this.workspace.uri);
     if (issues.length === 0) {
       const noItemText = this.customQuery.noItemText || 'No items found.';
@@ -68,7 +68,7 @@ export class CustomQueryItemModel extends ItemModel {
     }
   }
 
-  async getChildren(): Promise<vscode.TreeItem[]> {
+  async getChildren(): Promise<vscode.TreeItem[] | ItemModel[]> {
     try {
       return await this.getProjectIssues();
     } catch (e) {
