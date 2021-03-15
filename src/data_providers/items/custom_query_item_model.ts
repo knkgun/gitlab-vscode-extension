@@ -36,7 +36,7 @@ export class CustomQueryItemModel extends ItemModel {
     return item;
   }
 
-  private async getProjectIssues(): Promise<vscode.TreeItem[] | MrItemModel[]> {
+  private async getProjectIssues(): Promise<vscode.TreeItem[]> {
     const issues = await gitLabService.fetchIssuables(this.customQuery, this.workspace.uri);
     if (issues.length === 0) {
       const noItemText = this.customQuery.noItemText || 'No items found.';
@@ -62,13 +62,13 @@ export class CustomQueryItemModel extends ItemModel {
           (epic: RestIssuable) => new ExternalUrlItem(`&${epic.iid} · ${epic.title}`, epic.web_url),
         );
       case VULNERABILITY:
-        return issues.map((v: RestIssuable) => new VulnerabilityItem(v));
+        return issues.map((v: RestVulnerability) => new VulnerabilityItem(v));
       default:
         throw new Error(`unknown custom query type ${this.customQuery.type}`);
     }
   }
 
-  async getChildren(): Promise<vscode.TreeItem[] | MrItemModel[]> {
+  async getChildren(): Promise<vscode.TreeItem[]> {
     try {
       return await this.getProjectIssues();
     } catch (e) {

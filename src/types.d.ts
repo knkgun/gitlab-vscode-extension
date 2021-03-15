@@ -18,8 +18,6 @@ interface RestIssuable {
   references: {
     full: string; // e.g. "gitlab-org/gitlab#219925"
   };
-  severity: string;
-  name: string;
 }
 
 interface RestMrVersion {
