@@ -30,8 +30,6 @@ jest.mock('./service_factory', () => {
     }),
   };
 });
-jest.mock('./utils/get_user_agent_header');
-jest.mock('./utils/get_http_agent_options');
 
 describe('fetchIssueables', () => {
   beforeEach(() => jest.resetModules());
@@ -73,15 +71,20 @@ describe('fetchIssueables', () => {
 
   let request: jest.Mock;
   let fetchIssuablesRef: (params: CustomQuery, workspaceFolder: string) => Promise<RestIssuable[]>;
-  type MockFn = (...args: any) => any;
 
-  const setupFetchIssuable = ({ version = '13.9', mocks = [] }: Record<string, unknown> = {}) => {
+  interface SetupFetchOptions {
+    version?: string;
+    responses?: unknown[];
+  }
+
+  const setupFetchIssuable = ({ version = '13.9', responses = [] }: SetupFetchOptions = {}) => {
     request = require('request-promise');
     const { fetchIssuables } = require('./gitlab_service');
     jest.mock('request-promise', () => jest.fn(() => ({ response: [] })));
     fetchIssuablesRef = fetchIssuables;
 
-    const implementations = [() => ({ response: { version } }), ...(mocks as MockFn[])];
+    const createResponseImplementation = (response: unknown) => () => ({ response });
+    const implementations = [{ version }, ...responses].map(createResponseImplementation);
     implementations.forEach(imp => request.mockImplementationOnce(imp));
   };
 
@@ -159,11 +162,7 @@ describe('fetchIssueables', () => {
 
     it('sets author_id parameter if author is found', async () => {
       setupFetchIssuable({
-        mocks: [
-          () => {
-            return { response: [{ id: 1 }] };
-          },
-        ],
+        responses: [[{ id: 1 }]],
       });
       await fetchIssuablesHelper({ type: CustomQueryType.MR, author: 'testuser' });
       const search = new URLSearchParams(request.mock.calls[2][0]);
@@ -173,11 +172,7 @@ describe('fetchIssueables', () => {
 
     it('sets author_id parameter to -1 if author is not found', async () => {
       setupFetchIssuable({
-        mocks: [
-          () => {
-            return { response: [] };
-          },
-        ],
+        responses: [[]],
       });
       await fetchIssuablesHelper({ type: CustomQueryType.MR, author: 'testuser' });
       const search = new URLSearchParams(request.mock.calls[2][0]);
