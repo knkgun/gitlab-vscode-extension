@@ -328,6 +328,15 @@ export class GitLabNewService {
     return fileResult.text();
   }
 
+  async getRestIssue(issueIid: number, projectId: number | string): Promise<RestIssuable> {
+    const issuableUrl = `${this.instanceUrl}/api/v4/projects/${projectId}/issues/${issueIid}`;
+    const issuableResult = await crossFetch(issuableUrl, this.fetchOptions);
+    if (!issuableResult.ok) {
+      throw new FetchError(`Fetching issuable from ${issuableUrl} failed`, issuableResult);
+    }
+    return issuableResult.json();
+  }
+
   async getFile(
     path: string,
     ref: string,
